@@ -1,0 +1,7 @@
+FILE:
+  HPO_OBO: "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2023-01-27/hp.obo"
+  HPO_OBO_DISK: "data/hp.obo"
+  DISEASE_HPO: "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2023-01-27/phenotype.hpoa"
+  GENE_TO_HPO: "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2023-01-27/genes_to_phenotype.txt"
+COLS:
+  DISEASE_HPO: ["#DatabaseID", "HPO_ID", "DiseaseName", "Frequency"]
