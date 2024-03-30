@@ -1,22 +1,19 @@
 import os
 import io
-import sys
 import math
 import logging
 import requests
 
-from typing import Dict, Set, Tuple, List
+from typing import Dict, Set, Tuple
 from collections import defaultdict
 
 import pronto
 import numpy as np
 import pandas as pd
+from omegaconf import OmegaConf
 from scipy.special import softmax
 
-SEMANTIC_SIM_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(SEMANTIC_SIM_DIR)
-sys.path.append(ROOT_DIR)
-from SemanticSimilarity.data_model import Phenotype, Gene
+from .data_model import Phenotype, Gene
 
 FRQUENCY_AVG = {
     "HP:0040280": 1.0,  # Obligate
@@ -27,67 +24,7 @@ FRQUENCY_AVG = {
     "HP:0040285": 0,
 }
 
-
-def cal_symtpom_similarity_from_lambda(hpos: List[str], timeout: int = 100) -> Dict[str, float]:
-    """외부 AWS Lambda 서비스를 통해 증상 유사도 점수를 계산
-
-    이 함수는 주어진 HPO(Human Phenotype Ontology) 용어 목록을 기반으로 증상 유사도 점수를 계산하기 위해
-    AWS Lambda 서비스에 POST 요청. Lambda 서비스는 계산을 수행하고 질병에 대한 유사도 점수를 반환
-
-    Note:
-        Lambda 비용: 다음 150억GB-초/월	GB-초당 0.0000133334 USD
-        https://calculator.aws/#/addService/Lambda
-
-    Args:
-        hpos (List[str]): 증상 유사도 점수를 계산할 HPO 용어의 목록입니다.
-        timeout (int, optional): HTTP 요청의 제한 시간(초)입니다. 기본값은 100초
-
-    Returns:
-        Dict[str, float]: 질병 식별자를 키로 하고 증상 유사도 점수(0에서 1 사이의 부동소수점 값)를 값으로 갖는
-                          딕셔너리를 반환
-
-    Raises:
-        requests.HTTPError: HTTP 요청 또는 응답 처리 중에 오류가 발생한 경우 예외가 발생
-
-    Example:
-        hpos = ['HP:0000198', 'HP:0000564']
-        similarity_scores = cal_symtpom_similarity_from_lambda(hpos, timeout=120)
-        print(similarity_scores)
-    """
-
-    query_hpo = "\n".join(hpos)
-
-    query = f"START\nREQUEST:DISEASE\n{query_hpo}\nEND"
-    try:
-        response = requests.post(
-            url="https://dekc2xej2l.execute-api.ap-northeast-2.amazonaws.com/v1/hposim",
-            headers={"Content-Type": "application/json"},
-            json={"request": query},
-            timeout=timeout,
-        )
-        response.raise_for_status()
-    except:
-        raise requests.HTTPError("symptom similarity request error")
-
-    symptom_similarity_scores = dict()
-    for line in response.json()["body"]:
-        row = line.split(",")
-        if len(row) != 3:
-            continue
-
-        disease_id, score, _ = row
-        if disease_id.startswith("PMID:"):
-            disease_id = disease_id.replace("PMID:", "3B:")
-
-        elif disease_id.isdigit():
-            disease_id = "OMIM:" + disease_id
-
-        symptom_similarity_scores[disease_id] = (
-            float(score) if all(d.isdigit() for d in score.split(".")) else 0
-        )
-
-    return symptom_similarity_scores
-
+PACKAGE_DIR = os.path.dirname(__file__)
 
 class BaseSimilarityCalculator:
     def __init__(
@@ -400,11 +337,14 @@ class NodeLevelSimilarityCalculator(BaseSimilarityCalculator):
 
     def __init__(
         self,
-        config: dict,
         hpo_ontology: pronto.ontology.Ontology = None,
         logger=logging.Logger(__name__),
     ) -> None:
+        config = OmegaConf.load(os.path.join(PACKAGE_DIR, "config.yaml"))
         super().__init__(config, hpo_ontology, logger)
+        
+        self.set_level()
+        self.set_mica_mat()
 
     def get_semantic_similarity_one_side(
         self, concepts1: Set[Phenotype], concpets2: Set[Phenotype]
