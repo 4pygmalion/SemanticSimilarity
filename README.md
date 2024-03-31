@@ -2,6 +2,11 @@
 - 의미론적 유사도 계산기 평가를 위한 프로그램 [기존 논문 리뷰 참고](https://github.com/3billion/3ASC-Confirmed-variant-Resys/wiki/%EC%9D%98%EB%AF%B8%EB%A1%A0%EC%A0%81-%EC%9C%A0%EC%82%AC%EB%8F%84-%EC%B8%A1%EC%A0%95-%EB%B0%A9%EB%B2%95%EB%A1%A0:-%EB%B0%A9%EB%B2%95%EB%A1%A0-%EB%B0%8F-%ED%8E%98%EC%9D%B4%ED%8D%BC-%EB%AA%A8%EC%9D%8C)
 - Optimal patients, Noisy patients 구현
 
+## Data
+- https://drive.google.com/drive/folders/1OxdlGtj9N9f_XOXEm7QBNu5RSiR9jx3W?usp=drive_link
+![image](https://github.com/4pygmalion/SemanticSimilarity/assets/45510932/f96ad1be-a4ea-400f-94b7-340b34cf7974)
+
+
 ## Prerequsite
 ```bash
 $ pip install -r ../requirements.xtx
